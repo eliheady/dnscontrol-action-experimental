@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+
+name: DNSControl Action
+description: DNSControl GitHub Action using official StackExchange Docker image
+author: Eli Heady <eli.heady@gmail.com>
+
+inputs:
+  cmdargs:
+    description: DNSControl command and optional arguments
+    required: true
+
+  dnsconfig_file:
+    default: dnsconfig.js
+    description: Path to dnsconfig.js. Defaults to 'dnsconfig.js' (at repository root)
+    required: false
+
+  creds_file:
+    default: creds.json
+    description: Path to creds.json. Defaults to 'creds.json' (at repository root)
+    required: false
+
+outputs:
+  output:
+    description: DNSControl output
+
+runs:
+  using: docker
+  image: Containerfile
