@@ -5,6 +5,9 @@ set -euo pipefail
 # Resolve to full paths
 CONFIG_ABS_PATH="$(readlink -f "${INPUT_DNSCONFIG_FILE}")"
 CREDS_ABS_PATH="$(readlink -f "${INPUT_CREDS_FILE}")"
+if [ "${INPUT_OUTPUT_FILE}" != "" ]; then
+  OUTPUTFILE_ABS_PATH="$(readlink -f "${INPUT_OUTPUT_FILE}")"
+fi
 
 WORKING_DIR="$(dirname "${CONFIG_ABS_PATH}")"
 cd "$WORKING_DIR" || exit
@@ -37,5 +40,19 @@ DELIMITER="DNSCONTROL-$RANDOM"
   echo "$OUTPUT"
   echo "$DELIMITER"
 } >>"$GITHUB_OUTPUT"
+
+
+# write to output file and add filename to GITHUB_OUTPUT
+if [ -n "$OUTPUTFILE_ABS_PATH" ]; then
+  cat > "$OUTPUTFILE_ABS_PATH" <<EOF
+$OUTPUT
+EOF
+DELIMITER="DNSCONTROL-$RANDOM"
+{
+  echo "output-file<<$DELIMITER"
+  echo "$OUTPUTFILE_ABS_PATH"
+  echo "$DELIMITER"
+} >>"$GITHUB_OUTPUT"
+fi
 
 exit $EXIT_CODE

@@ -19,6 +19,11 @@ inputs:
     description: Path to creds.json. Defaults to 'creds.json' (at repository root)
     required: false
 
+  output_file:
+    default: ''
+    description: Write DNSControl output to this file
+    required: false
+
 outputs:
   output:
     description: DNSControl output
