@@ -8,6 +8,13 @@ permissions:
 on:
   workflow_call:
     inputs:
+      
+      check:
+        type: boolean
+        description: Run `dnscontrol check` before any other commands
+        required: false
+        default: false
+
       cmdargs:
         type: string
         description: DNSControl command and optional arguments
@@ -45,9 +52,11 @@ on:
 
 
 jobs:
-  preview:
-    if: ${{ !cancelled() }}
+
+  check:
+    if: ${{ !cancelled() && inputs.check == true }}
     runs-on: ubuntu-latest
+    continue-on-error: false
 
     permissions:
       pull-requests: write
@@ -58,11 +67,46 @@ jobs:
         uses: actions/checkout@v4
 
       - name: DNSControl check
+        id: check
         uses: eliheady/dnscontrol-action-experimental@v4.23.0-patch0
         env:
           NO_COLOR: 'true'
         with:
           cmdargs: "check"
+
+      - name: Attach Results as PR comment
+        uses: thollander/actions-comment-pull-request@v2
+        if: ${{ inputs.post_pr_comment && steps.check.outcome != 'success' }}
+        with:
+          comment_tag: dnscontrol_preview_push_external
+          message: |
+            <details open><summary>Results</summary>
+
+            ### DNS Control Results
+
+            ```
+            ${{ steps.check.outputs.output }}
+            ```
+            </details>
+
+      - name: Summary
+        if: ${{ inputs.post_summary && steps.check.outcome != 'success' }}
+        env:
+         DNSCONTROL_OUTPUT: ${{ steps.check.outputs.output }}
+        run: |
+          echo "$DNSCONTROL_OUTPUT" > "$GITHUB_STEP_SUMMARY"
+
+  dnscontrol_job:
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: DNSControl
         id: dnscontrol
