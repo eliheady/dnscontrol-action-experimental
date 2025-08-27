@@ -68,7 +68,7 @@ jobs:
 
       - name: DNSControl check
         id: check
-        uses: eliheady/dnscontrol-action-experimental@v4.23.0-patch0
+        uses: eliheady/dnscontrol-action-experimental@v4.23.0
         env:
           NO_COLOR: 'true'
         with:
@@ -110,7 +110,7 @@ jobs:
 
       - name: DNSControl
         id: dnscontrol
-        uses: eliheady/dnscontrol-action-experimental@v4.23.0-patch0
+        uses: eliheady/dnscontrol-action-experimental@v4.23.0
         with:
           cmdargs: ${{ inputs.cmdargs }}
         env:
