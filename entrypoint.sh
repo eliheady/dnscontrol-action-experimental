@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -o pipefail
 
 # Resolve to full paths
 CONFIG_ABS_PATH="$(readlink -f "${INPUT_DNSCONFIG_FILE}")"
