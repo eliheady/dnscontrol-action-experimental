@@ -7,6 +7,7 @@ permissions:
 
 on:
   workflow_call:
+
     inputs:
       
       check:
@@ -65,6 +66,9 @@ jobs:
 
       - name: Checkout repo
         uses: actions/checkout@v4
+        # using token to access private repo in testing
+        with:
+          token: ${{ secrets.READ_ACCESS_PAT }}
 
       - name: DNSControl check
         id: check
@@ -97,6 +101,8 @@ jobs:
           echo "$DNSCONTROL_OUTPUT" > "$GITHUB_STEP_SUMMARY"
 
   dnscontrol_job:
+    needs:
+      - check
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
 
@@ -107,6 +113,9 @@ jobs:
 
       - name: Checkout repo
         uses: actions/checkout@v4
+        # using token to access private repo in testing
+        with:
+          token: ${{ secrets.READ_ACCESS_PAT }}
 
       - name: DNSControl
         id: dnscontrol
