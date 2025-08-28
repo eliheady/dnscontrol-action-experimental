@@ -65,7 +65,7 @@ jobs:
     steps:
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         # using token to access private repo in testing
         with:
           token: ${{ secrets.READ_ACCESS_PAT }}
@@ -112,7 +112,7 @@ jobs:
     steps:
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         # using token to access private repo in testing
         with:
           token: ${{ secrets.READ_ACCESS_PAT }}
