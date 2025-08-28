@@ -124,7 +124,7 @@ runs:
           echo $DNSCONTROL_CMD
 
     - name: Attach Results as PR comment
-      uses: thollander/actions-comment-pull-request@v2
+      uses: thollander/actions-comment-pull-request@v3
       if: ${{ inputs.post_pr_comment && github.event.pull_request.number != '' }}
       with:
         comment_tag: dnscontrol_preview_push_external
