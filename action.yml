@@ -90,6 +90,8 @@ runs:
       continue-on-error: true
       id: check
       shell: bash
+      env:
+        NO_COLOR: 'true'
       run: |
           export DNSCONTROL_CMD=$($DNSCONTROL check --config ${{ inputs.dnsconfig_file }})
           DELIMITER="DNSCONTROL-$RANDOM"
@@ -113,6 +115,8 @@ runs:
       if: ${{ inputs.check == false || (inputs.check == 'true' && steps.check.outcome == 'success') }}
       continue-on-error: true
       shell: bash
+      env:
+        NO_COLOR: 'true'
       run: |
           export DNSCONTROL_CMD=$($DNSCONTROL ${{ inputs.cmdargs }} --config ${{ inputs.dnsconfig_file }} --creds ${{ inputs.creds_file }})
           DELIMITER="DNSCONTROL-$RANDOM"
