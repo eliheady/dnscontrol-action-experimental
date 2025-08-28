@@ -93,7 +93,10 @@ runs:
       env:
         NO_COLOR: 'true'
       run: |
-          export DNSCONTROL_CMD=$($DNSCONTROL check --config ${{ inputs.dnsconfig_file }})
+          set +e
+          DNSCONTROL_CMD=$($DNSCONTROL check --config ${{ inputs.dnsconfig_file }})
+          err=$?
+          export DNSCONTROL_CMD
           DELIMITER="DNSCONTROL-$RANDOM"
           {
             echo "output<<$DELIMITER"
@@ -101,6 +104,7 @@ runs:
             echo "$DELIMITER"
           } >>"$GITHUB_OUTPUT"
           echo $DNSCONTROL_CMD
+          exit $err
 
     - name: Check Summary
       if: ${{ steps.check.outcome != 'success' }}
@@ -109,6 +113,7 @@ runs:
         cat >${GITHUB_STEP_SUMMARY}<<EOF
         ${{ steps.check.outputs.output }}
         EOF
+        exit 1
 
     - name: DNSControl
       id: dnscontrol
