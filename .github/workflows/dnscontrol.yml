@@ -72,7 +72,7 @@ jobs:
 
       - name: DNSControl check
         id: check
-        uses: eliheady/dnscontrol-action-experiment@a300329c4be5397564e9657ed68632eb0389722e
+        uses: eliheady/dnscontrol-action-experiment@6fd7dcc1ee2fd5b2709b94e5a62b5129e5e98313
         env:
           NO_COLOR: 'true'
         with:
@@ -119,7 +119,7 @@ jobs:
 
       - name: DNSControl
         id: dnscontrol
-        uses: eliheady/dnscontrol-action-experiment@a300329c4be5397564e9657ed68632eb0389722e
+        uses: eliheady/dnscontrol-action-experiment@6fd7dcc1ee2fd5b2709b94e5a62b5129e5e98313
         with:
           cmdargs: ${{ inputs.cmdargs }}
         env:
