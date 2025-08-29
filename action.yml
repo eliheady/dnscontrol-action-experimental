@@ -48,7 +48,11 @@ inputs:
 outputs:
   output:
     description: DNSControl output
-    value: ${{ steps.dnscontrol.outputs.check_output }}
+    value: ${{ steps.dnscontrol.outputs.output }}
+  output_file:
+    description: DNSControl output written to file
+    value: ${{ steps.write_file.outputs.output_file }}
+
 
 runs:
   using: composite
@@ -107,6 +111,7 @@ runs:
           exit $err
 
     - name: Check Summary
+      # write check output to job summary if check failed
       if: ${{ steps.check.outcome != 'success' }}
       shell: bash
       run: |
@@ -117,6 +122,7 @@ runs:
 
     - name: DNSControl
       id: dnscontrol
+      # execute only if check was ok or skipped
       if: ${{ inputs.check == false || (inputs.check == 'true' && steps.check.outcome == 'success') }}
       continue-on-error: true
       shell: bash
@@ -132,9 +138,21 @@ runs:
           } >>"$GITHUB_OUTPUT"
           echo $DNSCONTROL_CMD
 
+    - name: Write output file
+      id: write_file
+      # execute if user specified an output file AND dnscontrol job ran
+      if: ${{ inputs.output_file != '' && steps.dnscontrol.outcome != '' }}
+      shell: bash
+      env:
+        OUTPUT_FILE: ${{ inputs.output_file }}
+      run: |
+        echo "${{ steps.dnscontrol.outputs.output }}" > $OUTPUT_FILE
+        echo "output_file=$OUTPUT_FILE" >>"$GITHUB_OUTPUT"
+
     - name: Attach Results as PR comment
       uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
-      if: ${{ inputs.post_pr_comment && github.event.pull_request.number != '' }}
+      # execute if user set post_pr_comment, this is a PR event, AND dnscontrol job ran
+      if: ${{ inputs.post_pr_comment && github.event.pull_request.number != '' && steps.dnscontrol.outcome != '' }}
       with:
         comment-tag: dnscontrol_preview_push_external
         message: |
@@ -149,7 +167,8 @@ runs:
 
     - name: Job Summary
       id: job_summary
-      if: ${{ inputs.post_summary == 'true' && steps.dnscontrol.outcome == 'success' }}
+      # execute if user set post_summary AND dnscontrol job ran
+      if: ${{ inputs.post_summary == 'true' && steps.dnscontrol.outcome != '' }}
       shell: bash
       run: |
         cat >${GITHUB_STEP_SUMMARY}<<EOF
