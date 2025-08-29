@@ -39,7 +39,7 @@ jobs:
           EOF
       -
         name: call dnscontrol action
-        uses: eliheady/dnscontrol-action-experiment@afe7ad4232191f47edaeda8c7dd95abbff089098
+        uses: eliheady/dnscontrol-action-experiment@09ee102d35cec26697214daa05e7d363e7c92770 # v0.0.1
         with:
           cmdargs: preview
           post_pr_comment: true
