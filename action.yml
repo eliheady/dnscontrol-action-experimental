@@ -113,7 +113,7 @@ runs:
 
     - name: Check Summary
       # write check output to job summary if check failed
-      if: ${{ steps.check.outcome != '' && steps.check.outcome != 'success' }}
+      if: ${{ steps.check.outcome != 'skipped' && steps.check.outcome != 'success' }}
       shell: bash
       run: |
         cat >${GITHUB_STEP_SUMMARY}<<EOF
@@ -143,7 +143,7 @@ runs:
     - name: Write output file
       id: write_file
       # execute if user specified an output file AND dnscontrol job ran
-      if: ${{ inputs.output_file != '' && steps.dnscontrol.outcome != '' }}
+      if: ${{ inputs.output_file != '' && steps.dnscontrol.outcome != 'skipped' }}
       shell: bash
       env:
         OUTPUT_FILE: ${{ inputs.output_file }}
@@ -170,7 +170,7 @@ runs:
     - name: Job Summary
       id: job_summary
       # execute if user set post_summary AND dnscontrol job ran
-      if: ${{ inputs.post_summary == 'true' && steps.dnscontrol.outcome != '' }}
+      if: ${{ inputs.post_summary == 'true' && steps.dnscontrol.outcome != 'skipped' }}
       shell: bash
       run: |
         cat >${GITHUB_STEP_SUMMARY}<<EOF
