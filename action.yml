@@ -117,6 +117,7 @@ runs:
       shell: bash
       run: |
         cat >${GITHUB_STEP_SUMMARY}<<EOF
+        outcome was ${{ steps.check.outcome }}
         ${{ steps.check.outputs.output }}
         EOF
         exit 1
