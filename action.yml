@@ -113,7 +113,7 @@ runs:
 
     - name: Check Summary
       # write check output to job summary if check failed
-      if: ${{ steps.check.outcome != 'success' }}
+      if: ${{ steps.check.outcome != '' && steps.check.outcome != 'success' }}
       shell: bash
       run: |
         cat >${GITHUB_STEP_SUMMARY}<<EOF
