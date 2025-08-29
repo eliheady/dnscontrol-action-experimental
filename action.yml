@@ -136,14 +136,16 @@ runs:
         NO_COLOR: 'true'
       run: |
           echo "DNSControl"
-          export DNSCONTROL_CMD=$($DNSCONTROL ${{ inputs.cmdargs }} --config ${{ inputs.dnsconfig_file }} --creds ${{ inputs.creds_file }})
+          set +e
+          DNSCONTROL_CMD=$($DNSCONTROL ${{ inputs.cmdargs }} --config ${{ inputs.dnsconfig_file }} --creds ${{ inputs.creds_file }})
+          err=$?
           DELIMITER="DNSCONTROL-$RANDOM"
           {
             echo "output<<$DELIMITER"
             echo "$DNSCONTROL_CMD"
             echo "$DELIMITER"
           } >>"$GITHUB_OUTPUT"
-          echo $DNSCONTROL_CMD
+          exit $err
 
     - name: Write output file
       id: write_file
