@@ -62,8 +62,10 @@ runs:
       if: ${{ inputs.version == 'latest' }}
       shell: bash
       run: |
+        CURL='curl -H user-agent:stackexchange-dnscontrol-action -fsS --retry 5 --retry-max-time 30'
+        echo "CURL=$CURL" >>"$GITHUB_ENV"
         URL=$(\
-          curl -fsSL https://api.github.com/repos/StackExchange/dnscontrol/releases/latest \
+          $CURL -L https://api.github.com/repos/StackExchange/dnscontrol/releases/latest \
           | jq -r '.assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url'\
         )
         echo "URL=$URL" >>"$GITHUB_ENV"
@@ -73,7 +75,7 @@ runs:
       shell: bash
       run: |
         URL=$(\
-          curl -fsSL https://api.github.com/repos/StackExchange/dnscontrol/releases \
+          $CURL -L https://api.github.com/repos/StackExchange/dnscontrol/releases \
           | jq -r '.[] | select(.tag_name == "${{ inputs.version }}") | .assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url' \
         )
         echo "URL=$URL" >>"$GITHUB_ENV"
@@ -82,8 +84,7 @@ runs:
       shell: bash
       run: |
         echo "Downloading DNSControl ${{ inputs.version }}"
-        curl -H user-agent:stackexchange-dnscontrol-action \
-          --max-time 300 -fsSL "${URL}" \
+        $CURL -L "${URL}" \
           | tar -xvzf - dnscontrol
         DNSCONTROL=$(readlink -f dnscontrol)
         echo "DNSCONTROL=$DNSCONTROL" >>"$GITHUB_ENV"
