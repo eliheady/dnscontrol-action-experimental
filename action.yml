@@ -58,6 +58,31 @@ runs:
   using: composite
   steps:
 
+    - name: Resolve runner 
+      shell: bash
+      run: |
+        case ${{ runner.os }} in
+          "Linux")
+            OS="linux"
+            EXT="tar.gz"
+          ;;
+          "Windows"
+            OS="windows"
+            EXT="zip"
+          ;;
+        esac
+        case "${{ runner.arch }}" in
+          "AMD64")
+            ARCH="amd64"
+          ;;
+          "ARM64")
+            ARCH="ARM64"
+          ;;
+        esac
+        echo "OS=$OS" >>"$GITHUB_ENV"
+        echo "EXT=$EXT" >>"$GITHUB_ENV"
+        echo "ARCH=$ARCH" >>"$GITHUB_ENV"
+
     - name: Resolve download URL for latest
       if: ${{ inputs.version == 'latest' }}
       shell: bash
@@ -67,9 +92,10 @@ runs:
         echo "CURL=$CURL" >>"$GITHUB_ENV"
         URL=$(\
           $CURL -L https://api.github.com/repos/StackExchange/dnscontrol/releases/latest \
-          | jq -r '.assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url'\
+          | jq -r ".assets[] | select(.name? | match(\"^dnscontrol_*.*.*_$OS_$ARCH.$EXT$\")) | .browser_download_url" \
         )
         echo "URL=$URL" >>"$GITHUB_ENV"
+        echo $URL
 
     - name: Resolve download URL for ${{ inputs.version }}
       if: ${{ inputs.version != 'latest' }}
