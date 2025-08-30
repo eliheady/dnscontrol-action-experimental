@@ -61,12 +61,12 @@ runs:
     - name: Resolve runner 
       shell: bash
       run: |
-        case ${{ runner.os }} in
+        case "${{ runner.os }}" in
           "Linux")
             OS="linux"
             EXT="tar.gz"
           ;;
-          "Windows"
+          "Windows")
             OS="windows"
             EXT="zip"
           ;;
