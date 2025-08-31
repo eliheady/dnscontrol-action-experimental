@@ -60,38 +60,45 @@ runs:
 
     - name: Sanitize inputs
       env:
-        DNSCONTROL_VERSION: ${{ inputs.version }}"
-        OUTPUT_FILE: ${{ inputs.output_file }}"
-        DNSCONFIG_FILE: ${{ inputs.dnsconfig_file }}"
-        CREDS_FILE: ${{ inputs.creds_file }}"
+        DNSCONTROL_VERSION: ${{ inputs.version }}
+        OUTPUT_FILE: ${{ inputs.output_file }}
+        DNSCONFIG_FILE: ${{ inputs.dnsconfig_file }}
+        CREDS_FILE: ${{ inputs.creds_file }}
       shell: bash
       run: |
-        if [ ! -e $DNSCONFIG_FILE ]; then
-          echo "the specified dnsconfig_file does not exist in workspace"
+        # Sanitize inputs
+        set +e
+        if [[ ! -e "$DNSCONFIG_FILE" ]]; then
+          echo "the specified dnsconfig_file \"$DNSCONFIG_FILE\" does not exist in workspace"
+          ls -al
           exit 1
         fi
-        if [ ! -e $CREDS_FILE ]; then
-          echo "the specified creds_file does not exist in workspace"
+        if [[ ! -e "$CREDS_FILE" ]]; then
+          echo "the specified creds_file \"$CREDS_FILE\" does not exist in workspace"
+          ls -al
           exit 1
         fi
-        if [[ ! $DNSCONTROL_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "invalid DNSControl version format"
-          exit 1
+        if [[ ! "$DNSCONTROL_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ "$DNSCONTROL_VERSION" != "latest" ]]; then
+            echo "invalid DNSControl version format \"$DNSCONTROL_VERSION\""
+            exit 1
+          fi
         fi
         cat >>"$GITHUB_ENV"<<EOF
-        DNSCONTROL_VERSION="$DNSCONTROL_VERSION"
-        OUTPUT_FILE="$OUTPUT_FILE"
-        DNSCONFIG_FILE="$DNSCONFIG_FILE"
-        CREDS_FILE="$CREDS_FILE"
+        DNSCONTROL_VERSION=$DNSCONTROL_VERSION
+        OUTPUT_FILE=$OUTPUT_FILE
+        DNSCONFIG_FILE=$DNSCONFIG_FILE
+        CREDS_FILE=$CREDS_FILE
         EOF
+        # set default curl args
+        CURL='curl -H user-agent:stackexchange-dnscontrol-action -fsS --retry 5 --retry-max-time 30'
+        echo "CURL=$CURL" >>"$GITHUB_ENV"
 
     - name: Resolve download URL for latest
       if: ${{ inputs.version == 'latest' }}
       shell: bash
       run: |
-        echo "Resolve download URL for latest"
-        CURL='curl -H user-agent:stackexchange-dnscontrol-action -fsS --retry 5 --retry-max-time 30'
-        echo "CURL=$CURL" >>"$GITHUB_ENV"
+        # Resolve download URL for latest
         URL=$(\
           $CURL -L https://api.github.com/repos/StackExchange/dnscontrol/releases/latest \
           | jq -r '.assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url'\
@@ -102,7 +109,7 @@ runs:
       if: ${{ inputs.version != 'latest' }}
       shell: bash
       run: |
-        echo "Resolve download URL for $DNSCONTROL_VERSION"
+        # Resolve download URL
         URL=$(\
           $CURL -L https://api.github.com/repos/StackExchange/dnscontrol/releases \
           | jq -r '.[] | select(.tag_name == "$DNSCONTROL_VERSION") | .assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url' \
@@ -112,7 +119,7 @@ runs:
     - name: Download DNSControl
       shell: bash
       run: |
-        echo "Download DNSControl $DNSCONTROL_VERSION"
+        # Download DNSControl
         $CURL -L "${URL}" \
           | tar -xvzf - dnscontrol
         DNSCONTROL=$(readlink -f dnscontrol)
@@ -127,7 +134,7 @@ runs:
       env:
         NO_COLOR: 'true'
       run: |
-          echo "DNSControl check"
+          # DNSControl check
           set +e
           DNSCONTROL_CMD=$($DNSCONTROL check --config "$DNSCONFIG_FILE")
           err=$?
@@ -138,18 +145,19 @@ runs:
             echo "$DNSCONTROL_CMD"
             echo "$DELIMITER"
           } >>"$GITHUB_OUTPUT"
-          echo $DNSCONTROL_CMD
+          echo "$DNSCONTROL_CMD"
           exit $err
 
     - name: Check Summary
       # write check output to job summary if check failed
       if: ${{ steps.check.outcome != 'skipped' && steps.check.outcome != 'success' }}
       shell: bash
+      env:
+        OUTPUT: ${{ steps.check.outputs.output }}
       run: |
-        echo "Check Summary"
-        cat >${GITHUB_STEP_SUMMARY}<<EOF
-        outcome was ${{ steps.check.outcome }}
-        ${{ steps.check.outputs.output }}
+        # Check Summary
+        cat >$"GITHUB_STEP_SUMMARY"<<EOF
+        "$OUTPUT"
         EOF
         exit 1
 
@@ -163,9 +171,9 @@ runs:
         NO_COLOR: 'true'
         DNSCONTROL_COMMAND: ${{ inputs.cmdargs }}
       run: |
-          echo "DNSControl"
+          # DNSControl
           set +e
-          DNSCONTROL_CMD=$($DNSCONTROL "$DNSCONTROL_COMMAND" --config "$DNSCONFIG_FILE" --creds "$CREDS_FILE")
+          DNSCONTROL_CMD=$($DNSCONTROL $DNSCONTROL_COMMAND --config "$DNSCONFIG_FILE" --creds "$CREDS_FILE")
           err=$?
           DELIMITER="DNSCONTROL-$RANDOM"
           {
@@ -182,9 +190,10 @@ runs:
       shell: bash
       env:
         OUTPUT_FILE: ${{ inputs.output_file }}
+        OUTPUT: ${{ steps.dnscontrol.outputs.output }}
       run: |
-        echo "Write output file"
-        echo "${{ steps.dnscontrol.outputs.output }}" > $OUTPUT_FILE
+        # Write output file
+        echo "$OUTPUT" > "$OUTPUT_FILE"
         echo "output_file=$OUTPUT_FILE" >>"$GITHUB_OUTPUT"
 
     - name: Attach Results as PR comment
@@ -208,8 +217,10 @@ runs:
       # execute if user set post_summary AND dnscontrol job ran
       if: ${{ inputs.post_summary == 'true' && steps.dnscontrol.outcome != 'skipped' }}
       shell: bash
+      env:
+        OUTPUT: ${{ steps.dnscontrol.outputs.output }}
       run: |
-        echo "Job Summary"
-        cat >${GITHUB_STEP_SUMMARY}<<EOF
-        ${{ steps.dnscontrol.outputs.output }}
+        # Job Summary
+        cat >"$GITHUB_STEP_SUMMARY"<<EOF
+        "$OUTPUT"
         EOF
