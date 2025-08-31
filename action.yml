@@ -58,6 +58,33 @@ runs:
   using: composite
   steps:
 
+    - name: Sanitize inputs
+      env:
+        DNSCONTROL_VERSION: ${{ inputs.version }}"
+        OUTPUT_FILE: ${{ inputs.output_file }}"
+        DNSCONFIG_FILE: ${{ inputs.dnsconfig_file }}"
+        CREDS_FILE: ${{ inputs.creds_file }}"
+      shell: bash
+      run: |
+        if [ ! -e $DNSCONFIG_FILE ]; then
+          echo "the specified dnsconfig_file does not exist in workspace"
+          exit 1
+        fi
+        if [ ! -e $CREDS_FILE ]; then
+          echo "the specified creds_file does not exist in workspace"
+          exit 1
+        fi
+        if [[ ! $DNSCONTROL_VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "invalid DNSControl version format"
+          exit 1
+        fi
+        cat >>"$GITHUB_ENV"<<EOF
+        DNSCONTROL_VERSION="$DNSCONTROL_VERSION"
+        OUTPUT_FILE="$OUTPUT_FILE"
+        DNSCONFIG_FILE="$DNSCONFIG_FILE"
+        CREDS_FILE="$CREDS_FILE"
+        EOF
+
     - name: Resolve download URL for latest
       if: ${{ inputs.version == 'latest' }}
       shell: bash
@@ -71,21 +98,21 @@ runs:
         )
         echo "URL=$URL" >>"$GITHUB_ENV"
 
-    - name: Resolve download URL for ${{ inputs.version }}
+    - name: Resolve download URL
       if: ${{ inputs.version != 'latest' }}
       shell: bash
       run: |
-        echo "Resolve download URL for ${{ inputs.version }}"
+        echo "Resolve download URL for $DNSCONTROL_VERSION"
         URL=$(\
           $CURL -L https://api.github.com/repos/StackExchange/dnscontrol/releases \
-          | jq -r '.[] | select(.tag_name == "${{ inputs.version }}") | .assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url' \
+          | jq -r '.[] | select(.tag_name == "$DNSCONTROL_VERSION") | .assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url' \
         )
         echo "URL=$URL" >>"$GITHUB_ENV"
 
-    - name: Download DNSControl ${{ inputs.version }}
+    - name: Download DNSControl
       shell: bash
       run: |
-        echo "Download DNSControl ${{ inputs.version }}"
+        echo "Download DNSControl $DNSCONTROL_VERSION"
         $CURL -L "${URL}" \
           | tar -xvzf - dnscontrol
         DNSCONTROL=$(readlink -f dnscontrol)
@@ -102,7 +129,7 @@ runs:
       run: |
           echo "DNSControl check"
           set +e
-          DNSCONTROL_CMD=$($DNSCONTROL check --config ${{ inputs.dnsconfig_file }})
+          DNSCONTROL_CMD=$($DNSCONTROL check --config "$DNSCONFIG_FILE")
           err=$?
           export DNSCONTROL_CMD
           DELIMITER="DNSCONTROL-$RANDOM"
@@ -134,10 +161,11 @@ runs:
       shell: bash
       env:
         NO_COLOR: 'true'
+        DNSCONTROL_COMMAND: ${{ inputs.cmdargs }}
       run: |
           echo "DNSControl"
           set +e
-          DNSCONTROL_CMD=$($DNSCONTROL ${{ inputs.cmdargs }} --config ${{ inputs.dnsconfig_file }} --creds ${{ inputs.creds_file }})
+          DNSCONTROL_CMD=$($DNSCONTROL "$DNSCONTROL_COMMAND" --config "$DNSCONFIG_FILE" --creds "$CREDS_FILE")
           err=$?
           DELIMITER="DNSCONTROL-$RANDOM"
           {
