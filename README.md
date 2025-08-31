@@ -69,7 +69,7 @@ jobs:
         # call the action with options to run `dnscontrol check` before `dnscontrol preview`,
         # post to the PR, and post to the job summary
         name: call dnscontrol action
-        uses: eliheady/dnscontrol-action-experiment@09ee102d35cec26697214daa05e7d363e7c92770 # v0.0.1
+        uses: eliheady/dnscontrol-action-experiment@02d8504cd0ff93bd974872c81f2553c4e578dcb6 # V0.0.2
         with:
           cmdargs: preview
           post_pr_comment: true
