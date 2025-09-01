@@ -15,6 +15,9 @@ This is a composite GitHub action for running configurable DNSControl commands.
 
 You can pre-populate your `creds.json` file and pass in its path as an input, or you can set your API secrets in environment variables and rely on DNSControl's built-in variable interpolation to use variable values to authenticate to your providers.
 
+> [!WARNING]
+> Secret values may be exposed in job logs when using environment variables to pass secrets. GitHub masks known secret values but debug logs or errors in GitHub's masking implementation may expose secret values.
+
 **Inputs**
 
 * **cmdargs**: The command and flags you want to run (required)
