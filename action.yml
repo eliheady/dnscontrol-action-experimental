@@ -112,7 +112,7 @@ runs:
         # Resolve download URL
         URL=$(\
           $CURL -L https://api.github.com/repos/StackExchange/dnscontrol/releases \
-          | jq -r '.[] | select(.tag_name == "$DNSCONTROL_VERSION") | .assets[] | select(.name? | match("dnscontrol_*.*.*_linux_amd64.tar.gz$")) | .browser_download_url' \
+          | jq -r ".[] | select(.tag_name == \"$DNSCONTROL_VERSION\") | .assets[] | select(.name? | match(\"dnscontrol_*.*.*_linux_amd64.tar.gz$\")) | .browser_download_url" \
         )
         echo "URL=$URL" >>"$GITHUB_ENV"
 
