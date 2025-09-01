@@ -55,7 +55,7 @@ jobs:
     steps:
       -
         name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       -
         # add all secrets needed for creds.json variable interpolation
         name: Prepare secrets
@@ -69,7 +69,7 @@ jobs:
         # call the action with options to run `dnscontrol check` before `dnscontrol preview`,
         # post to the PR, and post to the job summary
         name: call dnscontrol action
-        uses: eliheady/dnscontrol-action-experiment@02d8504cd0ff93bd974872c81f2553c4e578dcb6 # V0.0.2
+        uses: eliheady/dnscontrol-action-experiment@25d93bea2db9cae2c3ff71098cc82015de781938 # v0.0.3
         with:
           cmdargs: preview
           post_pr_comment: true
