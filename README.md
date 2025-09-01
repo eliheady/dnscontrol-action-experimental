@@ -61,12 +61,16 @@ jobs:
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       -
         # add all secrets needed for creds.json variable interpolation
-        name: Prepare secrets
-        id: secrets
+        name: Prepare creds_file
         run: |
-          cat >>${GITHUB_ENV}<<EOF
-          DNSCONTROL_ROUTE53_KEY_ID=${{ secrets.DNSCONTROL_ROUTE53_KEY_ID }}
-          DNSCONTROL_ROUTE53_KEY=${{ secrets.DNSCONTROL_ROUTE53_KEY }}
+          cat >creds-populated.json<<EOF
+          {
+            "route53": {
+              "TYPE": "ROUTE53",
+              "KeyId": "${{ secrets.DNSCONTROL_ROUTE53_KEY_ID }}",
+              "SecretKey": "${{ secrets.DNSCONTROL_ROUTE53_KEY }}"
+            }
+          }
           EOF
       -
         # call the action with options to run `dnscontrol check` before `dnscontrol preview`,
@@ -78,4 +82,5 @@ jobs:
           post_pr_comment: true
           post_summary: true
           check: true
+          creds_file: creds-populated.json
 ```
