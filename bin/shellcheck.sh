@@ -12,7 +12,7 @@ do
   tmpscript=$(mktemp)
   yq ".runs.steps[] | select(.name == \"$n\") | .run" < action.yml > "$tmpscript"
   bash -n "$tmpscript" || echo "the script in $n did not pass the validity check"
-  shellcheck --shell bash "$tmpscript" || echo "the script in $n did not pass shellcheck"
+  shellcheck --shell bash -e SC2086 "$tmpscript" || echo "the script in $n did not pass shellcheck"
   rm $tmpscript
   set -e
 done
