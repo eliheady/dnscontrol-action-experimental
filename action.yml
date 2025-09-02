@@ -64,35 +64,48 @@ runs:
         OUTPUT_FILE: ${{ inputs.output_file }}
         DNSCONFIG_FILE: ${{ inputs.dnsconfig_file }}
         CREDS_FILE: ${{ inputs.creds_file }}
+        CMDARGS: ${{ inputs.cmdargs }}
       shell: bash
       run: |
         # Sanitize inputs
         set +e
+        echo "OUTPUT_FILE=$OUTPUT_FILE" >>"$GITHUB_ENV"
+
         if [[ ! -e "$DNSCONFIG_FILE" ]]; then
           echo "the specified dnsconfig_file \"$DNSCONFIG_FILE\" does not exist in workspace"
-          ls -al
           exit 1
         fi
+        echo "DNSCONFIG_FILE=$DNSCONFIG_FILE" >>"$GITHUB_ENV"
+
         if [[ ! -e "$CREDS_FILE" ]]; then
           echo "the specified creds_file \"$CREDS_FILE\" does not exist in workspace"
-          ls -al
           exit 1
         fi
+        echo "CREDS_FILE=$CREDS_FILE" >>"$GITHUB_ENV"
+
         if [[ ! "$DNSCONTROL_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           if [[ "$DNSCONTROL_VERSION" != "latest" ]]; then
             echo "invalid DNSControl version format \"$DNSCONTROL_VERSION\""
             exit 1
           fi
         fi
-        cat >>"$GITHUB_ENV"<<EOF
-        DNSCONTROL_VERSION=$DNSCONTROL_VERSION
-        OUTPUT_FILE=$OUTPUT_FILE
-        DNSCONFIG_FILE=$DNSCONFIG_FILE
-        CREDS_FILE=$CREDS_FILE
-        EOF
+        echo "DNSCONTROL_VERSION=$DNSCONTROL_VERSION" >>"$GITHUB_ENV"
+
         # set default curl args
         CURL='curl -H user-agent:stackexchange-dnscontrol-action -fsS --retry 5 --retry-max-time 30'
         echo "CURL=$CURL" >>"$GITHUB_ENV"
+
+        # selectively append `--creds` to commands that need it
+        read -ra ARGS_SPLIT <<< "$CMDARGS"
+        case "${ARGS_SPLIT[0]}" in
+          preview | push | check-creds)
+            CREDS_ARG="--creds $CREDS_FILE"
+          ;;
+          *)
+            CREDS_ARG=""
+          ;;
+        esac
+        echo "CREDS_ARG=$CREDS_ARG" >>"$GITHUB_ENV"
 
     - name: Resolve download URL for latest
       if: ${{ inputs.version == 'latest' }}
@@ -173,7 +186,7 @@ runs:
       run: |
           # DNSControl
           set +e
-          DNSCONTROL_CMD=$($DNSCONTROL $DNSCONTROL_COMMAND --config "$DNSCONFIG_FILE" --creds "$CREDS_FILE")
+          DNSCONTROL_CMD=$($DNSCONTROL $DNSCONTROL_COMMAND --config "$DNSCONFIG_FILE" $CREDS_ARG)
           err=$?
           DELIMITER="DNSCONTROL-$RANDOM"
           {
