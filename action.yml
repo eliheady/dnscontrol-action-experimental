@@ -147,19 +147,19 @@ runs:
       env:
         NO_COLOR: 'true'
       run: |
-          # DNSControl check
-          set +e
-          DNSCONTROL_CMD=$($DNSCONTROL check --config "$DNSCONFIG_FILE")
-          err=$?
-          export DNSCONTROL_CMD
-          DELIMITER="DNSCONTROL-$RANDOM"
-          {
-            echo "output<<$DELIMITER"
-            echo "$DNSCONTROL_CMD"
-            echo "$DELIMITER"
-          } >>"$GITHUB_OUTPUT"
+        # DNSControl check
+        set +e
+        DNSCONTROL_CMD=$($DNSCONTROL check --config "$DNSCONFIG_FILE")
+        err=$?
+        export DNSCONTROL_CMD
+        DELIMITER="DNSCONTROL-$RANDOM"
+        {
+          echo "output<<$DELIMITER"
           echo "$DNSCONTROL_CMD"
-          exit $err
+          echo "$DELIMITER"
+        } >>"$GITHUB_OUTPUT"
+        echo "$DNSCONTROL_CMD"
+        exit $err
 
     - name: Check Summary
       # write check output to job summary if check failed
@@ -184,17 +184,17 @@ runs:
         NO_COLOR: 'true'
         DNSCONTROL_COMMAND: ${{ inputs.cmdargs }}
       run: |
-          # DNSControl
-          set +e
-          DNSCONTROL_CMD=$($DNSCONTROL $DNSCONTROL_COMMAND --config "$DNSCONFIG_FILE" $CREDS_ARG)
-          err=$?
-          DELIMITER="DNSCONTROL-$RANDOM"
-          {
-            echo "output<<$DELIMITER"
-            echo "$DNSCONTROL_CMD"
-            echo "$DELIMITER"
-          } >>"$GITHUB_OUTPUT"
-          exit $err
+        # DNSControl
+        set +e
+        DNSCONTROL_CMD=$($DNSCONTROL $DNSCONTROL_COMMAND --config "$DNSCONFIG_FILE" $CREDS_ARG)
+        err=$?
+        DELIMITER="DNSCONTROL-$RANDOM"
+        {
+          echo "output<<$DELIMITER"
+          echo "$DNSCONTROL_CMD"
+          echo "$DELIMITER"
+        } >>"$GITHUB_OUTPUT"
+        exit $err
 
     - name: Write output file
       id: write_file
