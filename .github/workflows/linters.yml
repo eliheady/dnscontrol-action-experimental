@@ -3,7 +3,7 @@ name: 'Run Linters'
 on:
   pull_request:
     paths:
-      - '*/Dockerfile'
+      - '*/action.yml'
 
 permissions:
   contents: read
@@ -18,9 +18,30 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: 'Checkout Repository'
+      - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
-        with:
-          dockerfile: Dockerfile
+      - name: Install yq
+        uses: frenck/action-setup-yq@c4b5be8b4a215c536a41d436757d9feb92836d4f # v1.0.2
+      
+      - name: Install shellcheck
+        env:
+          SHELLCHECK_PREFIX: ${{ runner.temp }}
+        run: |
+          CURL='curl -fsS --retry 5 --retry-max-time 30'
+          URL=$(\
+            $CURL -L https://api.github.com/repos/koalaman/shellcheck/releases/latest \
+            | jq -r '.assets[] | select(.name? | match("shellcheck_*.*.*.linux.x86_64.tar.xz$")) | .browser_download_url'\
+          )
+          VERSION=$(\
+            $CURL -L https://api.github.com/repos/koalaman/shellcheck/releases/latest \
+            | jq -r '.tag_name'\
+          )
+          $CURL -L "${URL}" | tar -C $SHELLCHECK_PREFIX -xvzf - shellcheck-$VERSION/shellcheck
+          $SHELLCHECK_PREFIX/shellcheck-$VERSION/shellcheck version
+
+          echo "$SHELLCHECK_PREFIX/shellcheck-$VERSION/shellcheck" >> "$GITHUB_PATH"
+
+      - name: Run shellcheck
+        run: bin/shellcheck.sh
+
