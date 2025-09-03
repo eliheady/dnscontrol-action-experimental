@@ -3,13 +3,13 @@ name: 'Run Linters'
 on:
   pull_request:
     paths:
-      - '*/action.yml'
+      - 'action.yml'
 
 permissions:
   contents: read
 
 jobs:
-  dependency-review:
+  linters:
     runs-on: ubuntu-latest
 
     steps:
