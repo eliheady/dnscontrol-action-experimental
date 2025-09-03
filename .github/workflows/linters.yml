@@ -38,7 +38,7 @@ jobs:
             | jq -r '.tag_name'\
           )
           $CURL -L "${URL}" | xzcat | tar -C $SHELLCHECK_PREFIX -xvf - shellcheck-$VERSION/shellcheck
-          $SHELLCHECK_PREFIX/shellcheck-$VERSION/shellcheck version
+          $SHELLCHECK_PREFIX/shellcheck-$VERSION/shellcheck --version
 
           echo "$SHELLCHECK_PREFIX/shellcheck-$VERSION/shellcheck" >> "$GITHUB_PATH"
 
