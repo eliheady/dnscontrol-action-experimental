@@ -25,6 +25,8 @@ jobs:
         uses: frenck/action-setup-yq@c4b5be8b4a215c536a41d436757d9feb92836d4f # v1.0.2
       
       - name: Install shellcheck
+        env:
+          SHELLCHECK_PREFIX: ${{ runner.temp }}
         run: |
           CURL='curl -fsS --retry 5 --retry-max-time 30'
           URL=$(\
@@ -35,11 +37,10 @@ jobs:
             $CURL -L https://api.github.com/repos/koalaman/shellcheck/releases/latest \
             | jq -r '.tag_name'\
           )
-          $CURL -L "${URL}" | tar -xvzf - shellcheck-$VERSION/shellcheck
-          echo "$(PWD)/shellcheck-$VERSION/shellcheck" >> "$GITHUB_PATH"
-          SHELLCHECK=$(readlink -f shellcheck)
-          echo "SHELLCHECK=$SHELLCHECK" >>"$GITHUB_ENV"
-          $SHELLCHECK version
+          $CURL -L "${URL}" | tar -C $SHELLCHECK_PREFIX -xvzf - shellcheck-$VERSION/shellcheck
+          $SHELLCHECK_PREFIX/shellcheck-$VERSION/shellcheck version
+
+          echo "$SHELLCHECK_PREFIX/shellcheck-$VERSION/shellcheck" >> "$GITHUB_PATH"
 
       - name: Run shellcheck
         run: bin/shellcheck.sh
