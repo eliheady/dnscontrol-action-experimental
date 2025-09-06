@@ -163,7 +163,7 @@ runs:
 
     - name: Check Summary
       # write check output to job summary if check failed
-      if: ${{ steps.check.outcome != 'skipped' && steps.check.outcome != 'success' }}
+      if: ${{ steps.check.outcome != 'success' && steps.check.outcome != 'skipped' }}
       shell: bash
       env:
         OUTPUT: ${{ steps.check.outputs.output }}
@@ -177,7 +177,7 @@ runs:
     - name: DNSControl
       id: dnscontrol
       # execute only if check was ok or skipped
-      if: ${{ (steps.check.outcome != 'skipped' && steps.check.outcome == 'success' ) || steps.check.outcome == 'skipped' }}
+      if: ${{ steps.check.outcome == 'success' || steps.check.outcome == 'skipped' }}
       continue-on-error: true
       shell: bash
       env:
