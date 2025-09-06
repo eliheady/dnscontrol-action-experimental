@@ -131,11 +131,13 @@ runs:
 
     - name: Download DNSControl
       shell: bash
+      env:
+        TEMP: ${{ runner.temp }}
       run: |
         # Download DNSControl
         $CURL -L "${URL}" \
-          | tar -xvzf - dnscontrol
-        DNSCONTROL=$(readlink -f dnscontrol)
+          | tar -C "$TEMP" -xvzf - dnscontrol
+        DNSCONTROL=$(readlink -f "$TEMP/dnscontrol")
         echo "DNSCONTROL=$DNSCONTROL" >>"$GITHUB_ENV"
         $DNSCONTROL version
 
