@@ -1,18 +1,33 @@
 #!/bin/sh
 
-# extract each bash `run` step from action.yml and run it through `bash -n` for
+# extract each bash `run` step from action and all workflows and run them through `bash -n` for
 # validity and shellcheck for safety. requires `yq` and `shellcheck` in $PATH
 
 IFS="
 "
 
-for n in $(yq '.runs.steps[].name' < action.yml )
-do
-  set +e
-  tmpscript=$(mktemp)
-  yq ".runs.steps[] | select(.name == \"$n\") | .run" < action.yml > "$tmpscript"
-  bash -n "$tmpscript" || echo "the script in $n did not pass the validity check"
-  shellcheck --shell bash -e SC2086 "$tmpscript" || echo "the script in $n did not pass shellcheck"
-  rm "$tmpscript"
-  set -e
-done
+find action.yml .github/workflows -type f -name \*yml -print -o -name \*yaml -print \
+  | while read -ra YAMLFILE
+    do
+
+      echo "Checking $YAMLFILE"
+
+      for n in $(yq '.. | select(has("steps")) | .steps[] | select(.run != null) | .name' < $YAMLFILE)
+      do
+        # do not error out while in this inner loop: we want to find all problems
+        set +e
+
+        # prepare a safe location to create a temporary script for evaluation
+        tmpscript=$(mktemp)
+
+        # extract the jobs.*.steps[].run element into the temp file
+        yq ".. | select(has(\"steps\")) | .steps[] | select(.name == \"$n\") | .run" < "$YAMLFILE" > "$tmpscript"
+
+        # run the checks
+        bash -n "$tmpscript" || echo "the script in $n did not pass the validity check"
+        shellcheck --shell bash -S warning "$tmpscript" || echo "the script in $n did not pass shellcheck"
+
+        rm "$tmpscript"
+        set -e
+      done
+    done
