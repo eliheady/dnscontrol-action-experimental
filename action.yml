@@ -171,9 +171,8 @@ runs:
         OUTPUT: ${{ steps.check.outputs.output }}
       run: |
         # Check Summary
-        cat >$"GITHUB_STEP_SUMMARY"<<EOF
-        "$OUTPUT"
-        EOF
+        echo "$OUTPUT" >>$"GITHUB_STEP_SUMMARY"
+        # check failed, stop the job
         exit 1
 
     - name: DNSControl
@@ -216,9 +215,9 @@ runs:
       # execute if user set post_pr_comment, this is a PR event, AND dnscontrol job ran
       if: ${{ inputs.post_pr_comment && github.event.pull_request.number != '' && steps.dnscontrol.outcome != 'skipped' }}
       with:
-        comment-tag: dnscontrol_preview_push_external
+        comment-tag: dnscontrol_composite_action
         message: |
-          <details open><summary>Results</summary>
+          <details open><summary>DNSControl Results</summary>
 
           ### DNSControl Results
 
@@ -236,6 +235,4 @@ runs:
         OUTPUT: ${{ steps.dnscontrol.outputs.output }}
       run: |
         # Job Summary
-        cat >"$GITHUB_STEP_SUMMARY"<<EOF
-        "$OUTPUT"
-        EOF
+        echo "$OUTPUT" >>"$GITHUB_STEP_SUMMARY"
