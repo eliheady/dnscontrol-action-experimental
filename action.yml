@@ -211,12 +211,14 @@ runs:
         echo "output_file=$OUTPUT_FILE" >>"$GITHUB_OUTPUT"
 
     - name: Attach Results as PR comment
-      uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
+      uses: peter-evans/create-or-update-comment@v4
       # execute if user set post_pr_comment, this is a PR event, AND dnscontrol job ran
       if: ${{ inputs.post_pr_comment && github.event.pull_request.number != '' && steps.dnscontrol.outcome != 'skipped' }}
       with:
-        comment-tag: dnscontrol_composite_action
-        message: |
+        # comment tag may be added to the action:
+        # pr #429, commit f4cc87372f6a4959d0b4060459f1ba177a09a13c
+        # comment-tag: dnscontrol_composite_action
+        body: |
           <details open><summary>DNSControl Results</summary>
 
           ### DNSControl Results
