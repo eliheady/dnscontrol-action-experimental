@@ -16,7 +16,7 @@ This is a composite GitHub action for running configurable DNSControl commands.
 You can pre-populate your `creds.json` file and pass in its path as an input, or you can set your API secrets in environment variables and rely on DNSControl's built-in variable interpolation to use variable values to authenticate to your providers.
 
 > [!WARNING]
-> Secret values may be exposed in job logs when using environment variables to pass secrets. GitHub masks known secret values but debug logs or errors in GitHub's masking implementation may expose secret values.
+> Secret values may be exposed in job logs when using environment variables to pass secrets. GitHub masks known secret values but debug logs or errors in GitHub's masking implementation may expose secret values. In short, populate your `creds.json` secrets and avoid writing secrets to environment variables if possible.
 
 **Inputs**
 
@@ -33,6 +33,22 @@ You can pre-populate your `creds.json` file and pass in its path as an input, or
 * **output_file**: The workspace file (if you specified) into which output from the dnscontrol command was written
 
 **Usage Example**
+
+Example with all inputs set:
+
+```yaml
+uses: eliheady/dnscontrol-composite-action
+with:
+  check: true
+  cmdargs: preview --expect-no-changes
+  creds_file: path/to/my-creds.json
+  dnsconfig_file: path/to/my-dnsconfig.json
+  output_file: dnscontrol-output.log
+  post_pr_comment: true
+  post_summary: true
+```
+
+**Simple DNSControl Preview Example**
 
 Run `dnscontrol preview` from a PR:
 
@@ -76,7 +92,7 @@ jobs:
         # call the action with options to run `dnscontrol check` before `dnscontrol preview`,
         # post to the PR, and post to the job summary
         name: call dnscontrol action
-        uses: eliheady/dnscontrol-action-experiment@25d93bea2db9cae2c3ff71098cc82015de781938 # v0.0.3
+        uses: eliheady/dnscontrol-composite-action@20815e1d394785504a8411889f845d9d16b8fed7 # v0.0.5
         with:
           cmdargs: preview
           post_pr_comment: true
